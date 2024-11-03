@@ -1,0 +1,9 @@
+Package: com.wangdaodao
+Name: wbnoads
+Version: 0.0.6
+Architecture: iphoneos-arm
+Description: 去除微博中各种广告
+Maintainer: wangdaodao
+Author: 王导导
+Section: Tweaks
+Depends: mobilesubstrate (>= 0.9.5000)
