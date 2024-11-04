@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-
+#import <os/log.h>
 
 //==============================================================================
 // 类声明部分
@@ -47,7 +47,7 @@
 @interface WBNavigationBarButton : UIButton
 @end
 
-// 时间线相关（用于 6️⃣）
+// 时线相关（用于 6️⃣）
 @interface WBTimelineExtendPageView : UIButton
 @end
 
@@ -82,6 +82,12 @@
 - (void)setCustomBackgroundImageView:(SpecialBgImageView *)view;
 @end
 
+// 添加这个接口声明到类声明部分
+@interface WBS3FeedCardView : UIView
+@property(retain, nonatomic) id viewData;
+- (void)updateWithViewData:(id)viewData;
+- (BOOL)shouldFilterStatus:(id)status;
+@end
 
 //==============================================================================
 // 1️⃣ 移除开屏广告
@@ -234,7 +240,7 @@
 // 4️⃣ 移除导航栏抽奖按钮
 //==============================================================================
 
-// 处理抽奖按钮
+// 处理抽按钮
 %hook WBNavLotteryButton
 
 - (id)initWithFrame:(CGRect)frame {
@@ -339,7 +345,7 @@
 %end
 
 //==============================================================================
-// 8️⃣ 移除信息流阅读状态按钮
+// 8️⃣ 移除信流阅读状态按钮
 //==============================================================================
 
 %hook WBFeedReadStatusButton
@@ -363,7 +369,7 @@
 %end
 
 //==============================================================================
-// 9️⃣ 移除内容头部分享单元格
+// 9️⃣ 移除内容头部分享元格
 //==============================================================================
 
 %hook WBContentHeaderShareCell
@@ -447,47 +453,79 @@
 %end
 
 //==============================================================================
-// 1️⃣3️⃣ 移除微博右方关注样式按钮
+// 1️⃣3️⃣ 移除广告推广等微博
 //==============================================================================
 
-%hook WBStyleButton
+%hook WBS3FeedCardView
 
-// 处理关注按钮
-- (void)layoutSubviews {
-    %orig;
+%new
+- (BOOL)shouldFilterStatus:(id)status {
+    if (!status) return NO;
     
-    // 获取按钮的标题
-    NSString *title = [self titleForState:UIControlStateNormal];
-    if(!title) return;
-    
-    // 隐藏关注按钮
-    if([title isEqualToString:@"关注"] || 
-       [title isEqualToString:@"+ 关注"] ||
-       [title isEqualToString:@"+关注"]) {
-        self.hidden = YES;
-        
-        // 强制父视图布局
-        [self.superview setNeedsLayout];
-        [self.superview layoutIfNeeded];
+    // 1. 检查广告标记
+    NSString *adMark = [status valueForKey:@"adMark"];
+    if (adMark.length > 0) {
+        return YES;
     }
+    
+    // 2. 检查微博类型
+    NSString *mblogtype = [status valueForKey:@"mblogtype"];
+    NSString *nMblogType = [status valueForKey:@"nMblogType"];
+    if ([mblogtype isEqualToString:@"广告"] || 
+        [nMblogType isEqualToString:@"广告"]) {
+        return YES;
+    }
+    
+    // 3. 检查推荐标记
+    NSNumber *positiveRecomFlag = [status valueForKey:@"positiveRecomFlag"];
+    if ([positiveRecomFlag longLongValue] > 0) {
+        return YES;
+    }
+    
+    // 4. 检查推荐类型
+    NSString *positiveRecomType = [status valueForKey:@"positiveRecomType"];
+    if (positiveRecomType.length > 0) {
+        return YES;
+    }
+    
+    // 5. 检查推荐来源
+    NSString *fromRecommendGuide = [status valueForKey:@"fromRecommendGuide"];
+    if (fromRecommendGuide.length > 0) {
+        return YES;
+    }
+    
+    return NO;
 }
 
-// 处理按钮尺寸
-- (CGSize)sizeThatFits:(CGSize)size {
-    CGSize origSize = %orig;
-    
-    // 获取按钮的标题
-    NSString *title = [self titleForState:UIControlStateNormal];
-    if(!title) return origSize;
-    
-    // 如果关注按钮，返回零尺寸
-    if([title isEqualToString:@"关注"] || 
-       [title isEqualToString:@"+ 关注"] ||
-       [title isEqualToString:@"+关注"]) {
-        return CGSizeZero;
+- (void)updateWithViewData:(id)viewData {
+    id status = [viewData valueForKey:@"timelineItem"];
+    if ([self shouldFilterStatus:status]) {
+        self.hidden = YES;
+        // 更新父视图布局
+        [self.superview setNeedsLayout];
+        [self.superview layoutIfNeeded];
+        // 保存 viewData 以便后续使用
+        self.viewData = nil;
+        return;
     }
-    
-    return origSize;
+    self.hidden = NO;
+    %orig;
+}
+
+// 添加新方法处理frame
+- (CGRect)frame {
+    if (self.hidden) {
+        return CGRectZero;
+    }
+    return %orig;
+}
+
+// 添加新方法处理高度
+- (CGFloat)height {
+    if (self.hidden) {
+        return 0;
+    }
+    return %orig;
 }
 
 %end
