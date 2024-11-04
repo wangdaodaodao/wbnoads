@@ -1,7 +1,11 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-// 使用前向声明替代导入头文件
+
+//==============================================================================
+// 类声明部分
+//==============================================================================
+// 开屏广告相关（用于 1️⃣）
 @interface WBLaunchNewViewController : UIViewController
 - (id)_fastLoadSplashAdUid;
 - (void)showPushSplashAd;
@@ -10,75 +14,79 @@
 - (void)asyncLoadSplashAd;
 @end
 
-// 添加新的接口声明
 @interface WBSSquareRefreshAttributionLogService : NSObject
 @property(nonatomic) BOOL bSplashAdShowing;
 - (BOOL)bShowingSplashAd;
 @end
 
-// 添加品牌广告相关的前向声明
-@interface WBPageCardBrandAdvertisementCardView : UIView
+// 故事流相关（用于 2️⃣）
+@interface WBStoryItemCollectionView : UIView
 @end
 
-@interface WBPageCardBrandAdvertisementCard : NSObject
-- (BOOL)isValid;
+@interface WBStoryItemCollectionViewCell : UICollectionViewCell
 @end
 
-@interface WBPageCardBrandAdvertisementCardSubItem : NSObject
-- (BOOL)isValid;
+@interface WBStoryItemListController : UIViewController
 @end
 
-@interface WBPageCardBrandAdvertisementAvatarView : UIView
+// 浮动视图相关（用于 3️⃣）
+@interface WBFloatingViewManager : NSObject
 @end
 
-@interface WBPageCardBrandAdvertisementCardCapsuleSGTitleView : UIView
+@interface WBFloatViewContainer : UIView
 @end
 
-@interface WBPageCardBrandAdvertisementCardCapsuleButton : UIButton
+// 导航栏相关（用于 4️⃣ 5️⃣）
+@interface WBNavLotteryButton : UIButton
 @end
 
-// 添加新的广告相关声明
-@interface WBUniversalStatus : NSObject
-@property(nonatomic) BOOL isAd;
+@interface WBNavEventLotteryHandler : NSObject
+@property(retain, nonatomic) WBNavLotteryButton *lotteryButton;
 @end
 
-@interface WBStatus : NSObject
-- (BOOL)vp_isAdVideo;
+@interface WBNavigationBarButton : UIButton
 @end
 
-@interface WBLBasePlaybackItem : NSObject
-@property(nonatomic) BOOL isAd;
+// 时间线相关（用于 6️⃣）
+@interface WBTimelineExtendPageView : UIButton
 @end
 
-@interface WBVideoAccountsHeaderView : UIView
-@property(nonatomic) BOOL isAd;
+// UI 组件相关（用于 7️⃣-1️⃣3️⃣）
+@interface WBContentHeaderCardCell : UITableViewCell
 @end
 
-@interface WBVideoShareContentView : UIView
-@property(nonatomic) BOOL isAd;
+@interface WBFeedReadStatusButton : UIButton
 @end
 
-@interface WBAdWeiboProxy : NSObject
-+ (BOOL)isAdFeatureEnabled:(id)arg1;
-- (BOOL)isAdFeatureEnabledLaunchGet:(id)arg1;
-- (BOOL)isAdFeatureEnabledServerPolicy:(id)arg1;
-- (BOOL)isAdFeatureEnabledLifeCyclePolicy:(id)arg1;
-- (BOOL)isAdFeatureEnabled:(id)arg1;
+@interface WBContentHeaderShareCell : UITableViewCell
 @end
 
-@interface WBSTCardChallengeNormalHeaderView : UIView
-- (BOOL)shouldShowSponsorNameLabel;
-- (BOOL)showSponsorActionLabel;
-- (BOOL)shouldShowSponsor;
+@interface WBContentHeaderTrendCell : UITableViewCell
 @end
 
-@interface WBSTCardChallengeAdHeaderView : UIView
-- (BOOL)showSponsorActionLabel;
-- (BOOL)shouldShowSponsorNameLabel;
-- (BOOL)shouldShowSponsor;
+@interface WBContentFollowUserView : UIView
 @end
 
-// 开屏广告处理
+@interface SpecialBgImageView : UIView
+@end
+
+@interface WBStyleButton : UIButton
+@end
+
+// 状态视图相关（用于 1️⃣2️⃣）
+@interface WBStatusViewModel : NSObject
+@end
+
+@interface WBStatusContentView : UIView
+- (void)setSpecialBgImageViewWithURL:(id)arg1;
+- (void)setCustomBackgroundImageView:(SpecialBgImageView *)view;
+@end
+
+
+//==============================================================================
+// 1️⃣ 移除开屏广告
+//==============================================================================
+
 %hook WBLaunchNewViewController
 
 // 阻止加载开屏广告 UID
@@ -119,7 +127,7 @@
 
 %end
 
-// 去除刷新，后台后开屏广告重新出现
+// 防止开屏广告在后台刷新后重新出现
 %hook WBSSquareRefreshAttributionLogService
 
 - (void)setBSplashAdShowing:(BOOL)showing {
@@ -136,291 +144,350 @@
 
 %end
 
-// 处理品牌广告卡
-%hook WBPageCardBrandAdvertisementCardView
+//==============================================================================
+// 2️⃣ 移除故事流广告
+//==============================================================================
+
+// 主要的事集合视图
+%hook WBStoryItemCollectionView
+
 - (void)layoutSubviews {
-    %orig;
-    self.hidden = YES;
-}
-%end
-
-// 处理品牌广告卡片的基类
-%hook WBPageCardBrandAdvertisementCard
-- (BOOL)isValid {
-    return NO;
-}
-%end
-
-// 处理图片查看器中的广告
-%hook WBPhotoViewerViewController
-- (void)showFlowAdvertisementView:(id)arg1 {
     return;
 }
 
-- (void)creatAdvertisementView {
-    return;
+- (void)setHidden:(BOOL)hidden {
+    %orig(YES);
 }
+
+- (CGRect)frame {
+    CGRect frame = %orig;
+    frame.size.height = 0;
+    return frame;
+}
+
 %end
 
-// 处理 Feed 流广告
-%hook WBNormalFeedGroup
-- (void)resetAdvertisements {
-    %orig;
-}
-%end
+// 故事单元格
+%hook WBStoryItemCollectionViewCell
 
-// 处理广告加载
-%hook WBAdDebugAvailableAdController
-- (void)loadAdvertisement {
-    return;
-}
-
-- (void)assembleAdvertisement:(id)arg1 {
-    return;
-}
-
-- (void)assembleDataCacheAdvertisement:(id)arg1 {
-    return;
-}
-%end
-
-// 处理品牌广告卡片子项
-%hook WBPageCardBrandAdvertisementCardSubItem
-- (BOOL)isValid {
-    return NO;
-}
-%end
-
-// 处理品牌广告头像视图
-%hook WBPageCardBrandAdvertisementAvatarView
 - (void)layoutSubviews {
-    %orig;
-    self.hidden = YES;
-}
-%end
-
-// 处理品牌广告标题视图
-%hook WBPageCardBrandAdvertisementCardCapsuleSGTitleView
-- (void)layoutSubviews {
-    %orig;
-    self.hidden = YES;
-}
-%end
-
-// 处理品牌广告按钮
-%hook WBPageCardBrandAdvertisementCardCapsuleButton
-- (void)layoutSubviews {
-    %orig;
-    self.hidden = YES;
-}
-%end
-
-// 处理普通挑战卡片头部的赞助内容
-%hook WBSTCardChallengeNormalHeaderView
-- (BOOL)shouldShowSponsorNameLabel {
-    return NO;
-}
-
-- (BOOL)showSponsorActionLabel {
-    return NO;
-}
-
-- (BOOL)shouldShowSponsor {
-    return NO;
-}
-%end
-
-// 处理广告挑战卡片头部的赞助内容
-%hook WBSTCardChallengeAdHeaderView
-- (BOOL)showSponsorActionLabel {
-    return NO;
-}
-
-- (BOOL)shouldShowSponsorNameLabel {
-    return NO;
-}
-
-- (BOOL)shouldShowSponsor {
-    return NO;
-}
-%end
-
-// 处理赞助事件
-%hook TaoLiveUserTrackController
-- (void)commitSponsorshipShowEvent:(id)arg1 {
     return;
 }
-%end
 
-// 处理Feed流推荐
-%hook WBLBottomRecommendModule
-- (BOOL)recommendVisible {
-    return NO;
-}
-%end
-
-// 处理Feed流推荐列表
-%hook WBFeedHotNewChannelListView 
-- (void)setupCurrentChannels:(id)arg1 recommendChannels:(id)arg2 unusedChannels:(id)arg3 {
-    %orig(arg1, nil, arg3);
-}
-%end
-
-// 处理视频推荐
-%hook WBVideoRecommendViewManager
-- (id)recommendViewShowDictionary {
+- (id)initWithFrame:(CGRect)frame {
     return nil;
 }
+
 %end
 
-// 处理文章推荐
-%hook WBArticleSlideBRecommendViewController
+// 故事列表控制器
+%hook WBStoryItemListController
+
 - (void)viewDidLoad {
     return;
 }
+
+- (id)init {
+    return nil;
+}
+
 %end
 
-// 处理头条文章推荐
-%hook WBNewHeadlineArticleViewController
-- (void)viewDidLoad {
+//==============================================================================
+// 3️⃣ 移除浮动红包广告
+//==============================================================================
+
+// 浮动视图管理器
+%hook WBFloatingViewManager
+
+- (id)init {
+    return nil;
+}
+
+- (void)showFloatingView:(id)view {
+    return;
+}
+
+%end
+
+// 浮动视图容器
+%hook WBFloatViewContainer
+
+- (void)layoutSubviews {
+    return;
+}
+
+- (void)setHidden:(BOOL)hidden {
+    %orig(YES);
+}
+
+- (CGRect)frame {
+    CGRect frame = %orig;
+    frame.size.height = 0;
+    frame.size.width = 0;
+    return frame;
+}
+
+%end
+
+//==============================================================================
+// 4️⃣ 移除导航栏抽奖按钮
+//==============================================================================
+
+// 处理抽奖按钮
+%hook WBNavLotteryButton
+
+- (id)initWithFrame:(CGRect)frame {
+    return nil;
+}
+
+- (void)layoutSubviews {
+    return;
+}
+
+- (void)setHidden:(BOOL)hidden {
+    %orig(YES);
+}
+
+%end
+
+// 处理抽奖事件处理器
+%hook WBNavEventLotteryHandler
+
+- (id)init {
+    return nil;
+}
+
+- (void)setLotteryButton:(WBNavLotteryButton *)button {
+    %orig(nil);
+}
+
+%end
+
+//==============================================================================
+// 5️⃣ 移除导航栏日历按钮
+//==============================================================================
+
+%hook WBNavigationBarButton
+
+- (void)layoutSubviews {
     %orig;
+    self.hidden = YES;
 }
 
-- (void)viewWillAppear:(BOOL)animated {
+%end
+
+//==============================================================================
+// 6️⃣ 移除时间线扩展页面
+//==============================================================================
+
+%hook WBTimelineExtendPageView
+
+- (void)layoutSubviews {
     %orig;
+    self.hidden = YES;
+    // 强制更新父视图布局
+    [self.superview setNeedsLayout];
+    [self.superview layoutIfNeeded];
 }
 
-// 拦截所有推荐相关的方法，返回nil
-- (id)recommendViewController {
-    return nil;
+- (CGRect)frame {
+    return CGRectZero;
 }
 
-- (id)recommendHintView {
-    return nil;
+- (CGSize)sizeThatFits:(CGSize)size {
+    return CGSizeZero;
 }
 
-- (id)recommendTipView {
-    return nil;
+- (CGSize)intrinsicContentSize {
+    return CGSizeZero;
 }
 
-// 阻止推荐相关的视图加载
-- (void)loadRecommendView {
-    return;
-}
-
-- (void)setupRecommendView {
-    return;
-}
-
-- (void)showRecommendView {
-    return;
-}
-
-// 拦截推荐相关的 setter 方法
-- (void)setRecommendViewController:(id)controller {
-    return;
-}
-
-- (void)setRecommendHintView:(id)view {
-    return;
-}
-
-- (void)setRecommendTipView:(id)view {
-    return;
-}
 %end
 
-// 处理用户推荐
-%hook WBNewRecommendEngine
-- (void)loadData {
-    return;
+//==============================================================================
+// 7️⃣ 移除内容头部卡片广告
+//==============================================================================
+
+%hook WBContentHeaderCardCell
+
+- (void)layoutSubviews {
+    %orig;
+    self.hidden = YES;
+    // 强制更新父视图布局
+    [self.superview setNeedsLayout];
+    [self.superview layoutIfNeeded];
 }
+
+- (CGFloat)height {
+    return 0;
+}
+
+- (CGSize)sizeThatFits:(CGSize)size {
+    return CGSizeZero;
+}
+
+- (CGSize)intrinsicContentSize {
+    return CGSizeZero;
+}
+
+// 处理 tableView 的高度
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return 0;
+}
+
 %end
 
-// 处理热门推荐
-%hook WBHotDataService
-- (NSMutableArray *)recommendChannels {
-    return nil;
+//==============================================================================
+// 8️⃣ 移除信息流阅读状态按钮
+//==============================================================================
+
+%hook WBFeedReadStatusButton
+
+- (void)layoutSubviews {
+    %orig;
+    self.hidden = YES;
+    // 强制更新父视图布局
+    [self.superview setNeedsLayout];
+    [self.superview layoutIfNeeded];
 }
+
+- (CGSize)sizeThatFits:(CGSize)size {
+    return CGSizeZero;
+}
+
+- (CGSize)intrinsicContentSize {
+    return CGSizeZero;
+}
+
 %end
 
-// 处理推荐弹窗
-%hook WBSGPageRecommendPopup
-- (void)show {
+//==============================================================================
+// 9️⃣ 移除内容头部分享单元格
+//==============================================================================
+
+%hook WBContentHeaderShareCell
+
+- (void)layoutSubviews {
+    %orig;
+    self.hidden = YES;
+}
+
+%end
+
+//==============================================================================
+// 🔟 移除内容头部趋势单元格
+//==============================================================================
+
+%hook WBContentHeaderTrendCell
+
+- (void)layoutSubviews {
+    %orig;
+    self.hidden = YES;
+}
+
+%end
+
+//==============================================================================
+// 1️⃣1️⃣ 移除评论上方浮动关注用户弹窗
+//==============================================================================
+
+%hook WBContentFollowUserView
+
+- (void)layoutSubviews {
+    %orig;
+    self.hidden = YES;
+}
+
+- (CGFloat)height {
+    return 0;
+}
+
+- (CGSize)sizeThatFits:(CGSize)size {
+    return CGSizeZero;
+}
+
+%end
+
+//==============================================================================
+// 1️⃣2️⃣ 移除微博特殊背景图片
+//==============================================================================
+
+%hook SpecialBgImageView
+
+- (void)layoutSubviews {
+    %orig;
+    self.hidden = YES;
+}
+
+- (CGRect)frame {
+    return CGRectZero;
+}
+
+%end
+
+%hook WBStatusContentView
+
+- (void)setSpecialBgImageViewWithURL:(id)arg1 {
     return;
 }
 
-- (void)showInView:(id)arg1 {
-    return;
+- (void)setCustomBackgroundImageView:(SpecialBgImageView *)view {
+    %orig(nil);
 }
 
-- (BOOL)isVisible {
+%end
+
+%hook WBStatusViewModel
+
+- (BOOL)shouldShowSpecialBgImageView {
     return NO;
 }
+
 %end
 
-// 处理用户兴趣推荐
-%hook WBPageCardNewUserInterestView
-- (id)initWithFrame:(CGRect)frame {
-    return nil;
+//==============================================================================
+// 1️⃣3️⃣ 移除微博右方关注样式按钮
+//==============================================================================
+
+%hook WBStyleButton
+
+// 处理关注按钮
+- (void)layoutSubviews {
+    %orig;
+    
+    // 获取按钮的标题
+    NSString *title = [self titleForState:UIControlStateNormal];
+    if(!title) return;
+    
+    // 隐藏关注按钮
+    if([title isEqualToString:@"关注"] || 
+       [title isEqualToString:@"+ 关注"] ||
+       [title isEqualToString:@"+关注"]) {
+        self.hidden = YES;
+        
+        // 强制父视图布局
+        [self.superview setNeedsLayout];
+        [self.superview layoutIfNeeded];
+    }
 }
 
-- (void)didMoveToSuperview {
-    return;
-}
-%end
-
-// 处理相似用户推荐
-%hook WBProfileSimilarRecommendContentView
-- (id)initWithFrame:(CGRect)frame {
-    return nil;
-}
-
-- (void)didMoveToSuperview {
-    return;
-}
-%end
-
-// 处理关注推荐
-%hook WBPopFollowedRecommondControl
-- (void)didMoveToSuperview {
-    return;
-}
-%end
-
-// 处理视频播放完成推荐
-%hook WBVideoItemRecommendVideoPlayGuideModule
-- (id)initWithFrame:(CGRect)frame {
-    return nil;
+// 处理按钮尺寸
+- (CGSize)sizeThatFits:(CGSize)size {
+    CGSize origSize = %orig;
+    
+    // 获取按钮的标题
+    NSString *title = [self titleForState:UIControlStateNormal];
+    if(!title) return origSize;
+    
+    // 如果关注按钮，返回零尺寸
+    if([title isEqualToString:@"关注"] || 
+       [title isEqualToString:@"+ 关注"] ||
+       [title isEqualToString:@"+关注"]) {
+        return CGSizeZero;
+    }
+    
+    return origSize;
 }
 
-- (void)didMoveToSuperview {
-    return;
-}
-
-- (BOOL)isVisible {
-    return NO;
-}
-
-- (void)show {
-    return;
-}
-%end
-
-// 处理短视频推荐
-%hook WBSVideoStreamCollectionOverlayView
-- (void)recommendNewSpot:(id)arg1 {
-    return;
-}
-%end
-
-// 处理故事推荐
-%hook WBStoryRecommendTableViewCell
-- (id)initWithFrame:(CGRect)frame {
-    return nil;
-}
-
-- (void)didMoveToSuperview {
-    return;
-}
 %end

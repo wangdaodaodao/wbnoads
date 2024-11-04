@@ -1,6 +1,6 @@
 Package: com.wangdaodao
 Name: wbnoads
-Version: 0.0.6
+Version: 2.0.0
 Architecture: iphoneos-arm
 Description: 去除微博中各种广告
 Maintainer: wangdaodao
